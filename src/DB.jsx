@@ -95,7 +95,7 @@ function LoadTableData({chooseTBL, colWidth, setColWidth}) {
   const listRef = useRef(null);
   const rowHeights = useRef({}); // 用來存每一 row 的 height
 
-  const getRowHeight = (index) => rowHeights.current[index] || 16; // default height 16px
+  const getRowHeight = (index) => rowHeights.current[index] || 24; // default height 16px
   const setRowHeight = (index, height) => {
     if (rowHeights.current[index] !== height) {
       rowHeights.current[index] = height;
@@ -119,15 +119,18 @@ function LoadTableData({chooseTBL, colWidth, setColWidth}) {
 
     useEffect(() => {
       if (rowRef.current && !measured) {
-        const height = rowRef.current.getBoundingClientRect().height;
+        const rectHeight = rowRef.current.getBoundingClientRect().height;
+        const fullHeight = rowRef.current.scrollHeight;
+        const height = (rectHeight !== fullHeight) ? fullHeight : rectHeight;
+        if(index == 43) console.log(index, height);
         setRowHeight(index, height);
         setMeasured(true);
       }
     }, [measured]);
 
-    // style let virtual window to set position
+    
     return (
-      <div ref={rowRef} className="row" style={{...style, height: getRowHeight(index)}}>
+      <div ref={rowRef} className="row" style={{...style}}>
         {dbData[index].map((val, val_id) => (
           <p key={`row-${index}-${val_id}`} 
              style={{ width: colWidth[val_id]}}>
@@ -164,7 +167,7 @@ function LoadTableData({chooseTBL, colWidth, setColWidth}) {
         itemCount={dbData.length}
         itemSize={getRowHeight} // 動態高度
         height={600} // 可視範圍高度
-        overscanCount={1000} // preload road
+        overscanCount={500} // preload road
       >
         {Row}
       </VList>
