@@ -16,20 +16,25 @@ span.load-path {
 }
 
 .row {
+  justify-content: center;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   transition: all .15s ease-out;
   padding: .3rem;
   margin-right: 2rem;
 }
 
 
-.row > * {
+.row > p {
   display: flex;
   justify-content: center;
   margin: 0;
   max-width: 10rem;
   transition: all .35s ease-out;
+}
+
+.row > p:hover {
+  background-color: darkcyan;
 }
 
 .col-header {
@@ -47,9 +52,7 @@ span.load-path {
   top: 1rem;
 }
 
-.row > *:hover {
-  background-color: darkcyan;
-}
+
 
 .database {
   display: grid;
@@ -149,10 +152,6 @@ span.load-path {
   filter: drop-shadow(0 0 2em #24c8db);
 }
 
-.row {
-  display: flex;
-  justify-content: center;
-}
 
 a {
   font-weight: 500;

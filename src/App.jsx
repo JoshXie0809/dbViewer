@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { useState } from "react";
 import "./App.css";
 
 import DB, {LoadPathBotton} from "./DB.jsx";

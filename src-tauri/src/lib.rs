@@ -98,7 +98,7 @@ fn db_tbl_data(state: State<DBState>, tblname: String)
     DBState::check_gaurd(&gaurd)?;
 
     DBState::check_gaurd(&gaurd)?;
-    let q: String = format!("SELECT * FROM {tblname} LIMIT 500;");
+    let q: String = format!("SELECT * FROM {tblname};");
     let conn: &Connection = gaurd.as_ref().unwrap();
     let mut stmt: rusqlite::Statement<'_> = conn
                 .prepare(&q)

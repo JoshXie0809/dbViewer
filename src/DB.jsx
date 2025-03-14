@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from '@tauri-apps/plugin-dialog';
 import dbicon from "./assets/database.svg"
@@ -43,7 +43,6 @@ function DB({path}) {
               connFinished={connFinished} 
               chooseTBL={chooseTBL}
               colWidth={colWidth} />
-
             <LoadTableData 
               chooseTBL={chooseTBL} 
               colWidth={colWidth} 
@@ -92,7 +91,53 @@ function LoadTableColnames({connFinished, chooseTBL, colWidth}) {
 function LoadTableData({chooseTBL, colWidth, setColWidth}) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [dbData, setDBData] = useState(null);
-  
+
+  const listRef = useRef(null);
+  const rowHeights = useRef({}); // 用來存每一 row 的 height
+
+  const getRowHeight = (index) => rowHeights.current[index] || 16; // default height 16px
+  const setRowHeight = (index, height) => {
+    if (rowHeights.current[index] !== height) {
+      rowHeights.current[index] = height;
+      listRef.current.resetAfterIndex(index, true);
+    }
+  };
+
+  // render each row, and set height
+  const Row = ({ index, style }) => {
+    const rowRef = useRef(null);
+    const [measured, setMeasured] = useState(false);
+
+    useEffect(() => {
+      // 重置高度資訊
+      rowHeights.current = {};
+      if (listRef.current) {
+        listRef.current.resetAfterIndex(0, true);
+      }
+      // 進行資料抓取...
+    }, [chooseTBL]);
+
+    useEffect(() => {
+      if (rowRef.current && !measured) {
+        const height = rowRef.current.getBoundingClientRect().height;
+        setRowHeight(index, height);
+        setMeasured(true);
+      }
+    }, [measured]);
+
+    // style let virtual window to set position
+    return (
+      <div ref={rowRef} className="row" style={{...style, height: getRowHeight(index)}}>
+        {dbData[index].map((val, val_id) => (
+          <p key={`row-${index}-${val_id}`} 
+             style={{ width: colWidth[val_id]}}>
+            {val}
+          </p>
+        ))}
+      </div>
+    );
+  };
+
   useEffect(() => { 
     async function fetchData() {
       try 
@@ -107,28 +152,27 @@ function LoadTableData({chooseTBL, colWidth, setColWidth}) {
       catch (error) 
       {  console.error("error while attach db/db_colnames;", error); }  
     }
-
+    setIsLoaded(false)
     if(chooseTBL !== "") fetchData();
-    
   }, [chooseTBL])
 
-  if(isLoaded && (chooseTBL !== "")) return (
-   
-   dbData.map((row, rowID) => {
-    return(
-      <div className="row" key={`row-${rowID}`}> 
-        {
-          row.map((val, val_id) => {
-            return(<p key={`$row-{rowID}-${val_id}`} 
-                      style={{width: colWidth[val_id]}}> 
-                      {val} 
-                    </p>)
-          })
-        }
-      </div>
-    )}) 
-  )
-}
+  if(dbData && isLoaded && (chooseTBL !=="")  ) return (
+    <div>
+      <VList
+        key={chooseTBL}  // 每次 table 切換時重新渲染 VList
+        ref={listRef}
+        itemCount={dbData.length}
+        itemSize={getRowHeight} // 動態高度
+        height={600} // 可視範圍高度
+        overscanCount={1000} // preload road
+      >
+        {Row}
+      </VList>
+    </div>
+  );
+};
+
+
 
 function LoadTbList({path, setChooseTBL}) {
   const [tbLists, setTBLists] = useState(null);
@@ -184,11 +228,11 @@ function TableIcon() {
     width="24"
     height="24"
   >
-      <rect x="3" y="4" width="18" height="16" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none" />
-      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="2" />
-      <line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" stroke-width="2" />
-      <line x1="8" y1="4" x2="8" y2="20" stroke="currentColor" stroke-width="2" />
-      <line x1="16" y1="4" x2="16" y2="20" stroke="currentColor" stroke-width="2" />
+      <rect x="3" y="4" width="18" height="16" rx="2" ry="2" stroke="currentColor" strokeWidth="2" fill="none" />
+      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2" />
+      <line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" strokeWidth="2" />
+      <line x1="8" y1="4" x2="8" y2="20" stroke="currentColor" strokeWidth="2" />
+      <line x1="16" y1="4" x2="16" y2="20" stroke="currentColor" strokeWidth="2" />
   </svg>
 }
 
