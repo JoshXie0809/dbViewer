@@ -9,6 +9,7 @@ function DB({path}) {
   const [chooseTBL, setChooseTBL] = useState("");
   const [colWidth, setColWidth] = useState(null);
 
+
     useEffect(() => 
       {
         async function connDB(path) {
@@ -36,8 +37,6 @@ function DB({path}) {
     return (
       <div className="database"> 
         <LoadTbList path={path} setChooseTBL={setChooseTBL}/>
-
-        <div className="database-table-content">
           <div className="database-table-content-data"> 
             <LoadTableColnames 
               connFinished={connFinished} 
@@ -48,7 +47,6 @@ function DB({path}) {
               colWidth={colWidth} 
               setColWidth={setColWidth}/>
           </div>
-        </div> 
 
       </div> )
 }
@@ -76,7 +74,7 @@ function LoadTableColnames({connFinished, chooseTBL, colWidth}) {
   }, [connFinished, chooseTBL])
   
   if(isLoaded && connFinished && (chooseTBL !== "") && colWidth) return (
-  <div className="row col-header" key="tbl-colnames"> 
+  <div className="row col-header" key="tbl-colnames" style={{width: "calc(100% - 15px)"}}> 
     {
         dbColnames.map((colName, iCol) => {
             return <p className="header-cell" 
@@ -95,11 +93,24 @@ function LoadTableData({chooseTBL, colWidth, setColWidth}) {
   const listRef = useRef(null);
   const rowHeights = useRef({}); // 用來存每一 row 的 height
 
-  const getRowHeight = (index) => rowHeights.current[index] || 24; // default height 16px
+  useEffect(() => {
+    // 重置高度資訊
+    rowHeights.current = {};
+    if (listRef.current) {
+      listRef.current.resetAfterIndex(0, true);
+    }
+    console.log(chooseTBL)
+    // 進行資料抓取...
+  }, [chooseTBL]);
+
+  const getRowHeight = (index) => {
+    return rowHeights.current[index] || 24 // default height 16px
+  }
+
   const setRowHeight = (index, height) => {
     if (rowHeights.current[index] !== height) {
+      listRef.current?.resetAfterIndex(index, true);
       rowHeights.current[index] = height;
-      listRef.current.resetAfterIndex(index, true);
     }
   };
 
@@ -109,35 +120,24 @@ function LoadTableData({chooseTBL, colWidth, setColWidth}) {
     const [measured, setMeasured] = useState(false);
 
     useEffect(() => {
-      // 重置高度資訊
-      rowHeights.current = {};
-      if (listRef.current) {
-        listRef.current.resetAfterIndex(0, true);
+      const rectHeight = rowRef.current?.getBoundingClientRect().height;
+      const fullHeight = rowRef.current?.scrollHeight;
+      if (rectHeight > 0) {
+        setRowHeight(index, fullHeight);    
+        setMeasured(true); // ✅ 確保只測量一次
       }
-      // 進行資料抓取...
-    }, [chooseTBL]);
+    }, [measured, setMeasured, index, setRowHeight]);
 
-    useEffect(() => {
-      if (rowRef.current && !measured) {
-        const rectHeight = rowRef.current.getBoundingClientRect().height;
-        const fullHeight = rowRef.current.scrollHeight;
-        const height = (rectHeight !== fullHeight) ? fullHeight : rectHeight;
-        if(index == 43) console.log(index, height);
-        setRowHeight(index, height);
-        setMeasured(true);
-      }
-    }, [measured]);
 
-    
     return (
-      <div ref={rowRef} className="row" style={{...style}}>
-        {dbData[index].map((val, val_id) => (
-          <p key={`row-${index}-${val_id}`} 
-             style={{ width: colWidth[val_id]}}>
-            {val}
-          </p>
-        ))}
-      </div>
+        <div ref={rowRef} className="row" style={{...style}}>
+          {dbData[index].map((val, val_id) => (
+            <p key={`row-${index}-${val_id}`} 
+              style={{ width: colWidth[val_id]}}>
+              {val}
+            </p>
+          ))}
+        </div>
     );
   };
 
@@ -159,19 +159,18 @@ function LoadTableData({chooseTBL, colWidth, setColWidth}) {
     if(chooseTBL !== "") fetchData();
   }, [chooseTBL])
 
+
   if(dbData && isLoaded && (chooseTBL !=="")  ) return (
-    <div>
       <VList
         key={chooseTBL}  // 每次 table 切換時重新渲染 VList
         ref={listRef}
         itemCount={dbData.length}
-        itemSize={getRowHeight} // 動態高度
+        itemSize={(index) => getRowHeight(index)} // 動態高度
         height={600} // 可視範圍高度
-        overscanCount={500} // preload road
+        overscanCount={50} // preload road
       >
         {Row}
       </VList>
-    </div>
   );
 };
 
@@ -187,7 +186,6 @@ function LoadTbList({path, setChooseTBL}) {
     }
     get_tbl_lists();
   }, [path])
-
 
   if(!tbLists) return <div className="database-table-lists"></div>
   return <div className="database-table-lists">
