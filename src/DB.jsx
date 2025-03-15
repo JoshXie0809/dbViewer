@@ -47,7 +47,6 @@ function DB({path}) {
               colWidth={colWidth} 
               setColWidth={setColWidth}/>
           </div>
-
       </div> )
 }
 

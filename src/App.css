@@ -53,7 +53,7 @@ span.load-path {
   display: grid;
   grid-template-columns: 1fr 5fr;
   padding: 1rem;
-  height: 80vh;
+  height: 600px;
 }
 
 .database-table-lists {
