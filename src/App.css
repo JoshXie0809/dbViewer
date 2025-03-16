@@ -37,9 +37,8 @@ span.load-path {
 }
 
 .col-header {
-  position: sticky;
-  top: 0%;
-  margin: 0;
+  margin-bottom: .5rem;
+
 }
 
 .header-cell {
